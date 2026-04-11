@@ -29,6 +29,7 @@ export const Model = () => {
   const [colonyLogisticGrowth, setColonyLogisticGrowth] = createSignal(true)
   const [baseCapacity, setBaseCapacity] = createSignal(10)
   const [colonyCapacity, setColonyCapacity] = createSignal(5)
+  const [generation, setGeneration] = createSignal(120)
 
   const neverColonizeResult = createMemo(() => {
     return evaluate(
@@ -38,7 +39,7 @@ export const Model = () => {
         colonyCapacity: colonyLogisticGrowth() ? colonyCapacity() : undefined,
       },
       neverColonize,
-      100,
+      generation(),
     )
   })
 
@@ -50,7 +51,7 @@ export const Model = () => {
         colonyCapacity: colonyLogisticGrowth() ? colonyCapacity() : undefined,
       },
       porportionalColonize(1 / 2),
-      100,
+      generation(),
     )
   })
 
@@ -85,9 +86,31 @@ export const Model = () => {
         <Chart data={data()} />
       </CardContent>
       <CardFooter>
-        <details class='w-full'>
+        <details class="w-full">
           <summary class="font-semibold">Parameters</summary>
           <section class="m-2 mt-6 flex flex-col gap-4">
+            <h2>Generic</h2>
+            <div class="grid grid-cols-2 gap-8">
+              <NumberField
+                value={generation()}
+                defaultValue={120}
+                required
+                minValue={1}
+                // a very high value results in performance issues
+                maxValue={1200}
+                onChange={setGeneration}
+              >
+                <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
+                <NumberFieldGroup>
+                  <NumberFieldDecrementTrigger aria-label="Decrement" />
+                  <NumberFieldInput />
+                  <NumberFieldIncrementTrigger aria-label="Increment" />
+                </NumberFieldGroup>
+              </NumberField>
+            </div>
+          </section>
+          <section class="m-2 mt-6 flex flex-col gap-4">
+            <h2>Logistic Growth</h2>
             <div class="grid grid-cols-2 gap-8 ">
               <div class="flex flex-col gap-4">
                 <Switch
@@ -117,7 +140,7 @@ export const Model = () => {
                   </NumberFieldGroup>
                 </NumberField>
               </div>
-              <div class='flex flex-col gap-4'>
+              <div class="flex flex-col gap-4">
                 <Switch
                   class="flex items-center space-x-2"
                   checked={colonyLogisticGrowth()}
