@@ -24,6 +24,17 @@ const neverColonize: Strategy = (state, constants) => {
   }
 }
 
+const porportionalColonize =
+  (k: number): Strategy =>
+  (state, constants) => {
+    const colonyInvestment = state.baseProductivity * k
+    const baseInvestment = state.baseProductivity - colonyInvestment
+    return {
+      baseInvestment,
+      colonyInvestment,
+    }
+  }
+
 const evaluate = (
   constants: Constants,
   strategy: Strategy,
@@ -44,7 +55,7 @@ const evaluate = (
   return state.baseProductivity + state.colonyProductivity
 }
 
-const result = evaluate(
+const result1 = evaluate(
   {
     initialBaseProductivity: 100,
     colonizationPenalty: 2,
@@ -55,4 +66,17 @@ const result = evaluate(
   12,
 )
 
-console.info(`Total productivity after 12 months: ${result}`)
+console.info(`Total productivity after 12 months: ${result1}`)
+
+const result2 = evaluate(
+  {
+    initialBaseProductivity: 100,
+    colonizationPenalty: 2,
+    baseCapacity: 1000,
+    colonyCapacity: 500,
+  },
+  porportionalColonize(0.5),
+  12,
+)
+
+console.info(`Total productivity after 12 months: ${result2}`)
