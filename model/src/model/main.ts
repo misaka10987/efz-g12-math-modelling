@@ -49,8 +49,14 @@ const evaluate = (
       `Month ${currentMonth} total productivity ${state.baseProductivity + state.colonyProductivity}`,
     )
     const decision = strategy(state, constants)
-    state.baseProductivity += decision.baseInvestment
-    state.colonyProductivity += decision.colonyInvestment / constants.colonizationPenalty + state.colonyProductivity
+    // logistic growth
+    state.baseProductivity +=
+      decision.baseInvestment *
+      (1 - state.baseProductivity / constants.baseCapacity)
+    state.colonyProductivity +=
+      (decision.colonyInvestment / constants.colonizationPenalty +
+        state.colonyProductivity) *
+      (1 - state.colonyProductivity / constants.colonyCapacity)
   }
   return state.baseProductivity + state.colonyProductivity
 }
