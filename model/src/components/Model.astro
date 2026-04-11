@@ -1,14 +1,22 @@
 ---
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/starwind/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/starwind/card'
+import {Chart} from '@/components/Chart'
 ---
 
-<Card class="w-[360px]" slot="preview">
+<Card class="w-2xl max-w-[90vw]" slot="preview">
   <CardHeader>
     <CardTitle>Model</CardTitle>
     <CardDescription>TODO</CardDescription>
   </CardHeader>
   <CardContent class="flex flex-col gap-4">
+    <Chart client:load />
   </CardContent>
-  <CardFooter class="flex justify-between">
-  </CardFooter>
+  <CardFooter class="flex justify-between" />
 </Card>
