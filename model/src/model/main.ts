@@ -50,7 +50,7 @@ const evaluate = (
     )
     const decision = strategy(state, constants)
     state.baseProductivity += decision.baseInvestment
-    state.colonyProductivity += decision.colonyInvestment
+    state.colonyProductivity += decision.colonyInvestment / constants.colonizationPenalty + state.colonyProductivity
   }
   return state.baseProductivity + state.colonyProductivity
 }
