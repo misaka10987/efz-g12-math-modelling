@@ -7,7 +7,12 @@ import {
   CardHeader,
   CardTitle,
 } from './shadcn-solid/Card'
-import { evaluate, neverColonize, porportionalColonize } from '@/model/main'
+import {
+  evaluate,
+  neverColonize,
+  porportionalColonize,
+  type Constants,
+} from '@/model/main'
 import {
   Switch,
   SwitchControl,
@@ -24,35 +29,32 @@ import {
   NumberFieldLabel,
 } from './shadcn-solid/numberfield'
 
+const ConfigSection = (props: { title: string; children?: any }) => {
+  return (
+    <section class="m-2 mt-6 flex flex-col gap-4">
+      <h2>{props.title}</h2>
+      <div class="grid grid-cols-2 gap-8">{props.children}</div>
+    </section>
+  )
+}
+
 export const Model = () => {
-  const [baseLogisticGrowth, setBaseLogisticGrowth] = createSignal(true)
-  const [colonyLogisticGrowth, setColonyLogisticGrowth] = createSignal(true)
-  const [baseCapacity, setBaseCapacity] = createSignal(10)
-  const [colonyCapacity, setColonyCapacity] = createSignal(5)
+  const [constants, setConstants] = createSignal<Constants>({
+    colonizationPenalty: 5,
+    baseLogistic: true,
+    baseCapacity: 10,
+    colonyLogistic: true,
+    colonyCapacity: 5,
+  })
+
   const [generation, setGeneration] = createSignal(120)
 
   const neverColonizeResult = createMemo(() => {
-    return evaluate(
-      {
-        colonizationPenalty: 5,
-        baseCapacity: baseLogisticGrowth() ? baseCapacity() : undefined,
-        colonyCapacity: colonyLogisticGrowth() ? colonyCapacity() : undefined,
-      },
-      neverColonize,
-      generation(),
-    )
+    return evaluate(constants(), neverColonize, generation())
   })
 
   const proportionalColonizeResult = createMemo(() => {
-    return evaluate(
-      {
-        colonizationPenalty: 5,
-        baseCapacity: baseLogisticGrowth() ? baseCapacity() : undefined,
-        colonyCapacity: colonyLogisticGrowth() ? colonyCapacity() : undefined,
-      },
-      porportionalColonize(1 / 2),
-      generation(),
-    )
+    return evaluate(constants(), porportionalColonize(1 / 2), generation())
   })
 
   const data = createMemo(() => {
@@ -88,19 +90,50 @@ export const Model = () => {
       <CardFooter>
         <details class="w-full">
           <summary class="font-semibold">Parameters</summary>
-          <section class="m-2 mt-6 flex flex-col gap-4">
-            <h2>Generic</h2>
-            <div class="grid grid-cols-2 gap-8">
+          <ConfigSection title="Generic">
+            <NumberField
+              value={generation()}
+              defaultValue={120}
+              required
+              minValue={1}
+              // a very high value results in performance issues
+              maxValue={1200}
+              onChange={setGeneration}
+            >
+              <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
+              <NumberFieldGroup>
+                <NumberFieldDecrementTrigger aria-label="Decrement" />
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger aria-label="Increment" />
+              </NumberFieldGroup>
+            </NumberField>
+          </ConfigSection>
+          <ConfigSection title="Logistic Growth">
+            <div class="flex flex-col gap-4">
+              <Switch
+                class="flex items-center space-x-2"
+                checked={constants().baseLogistic}
+                onChange={(x) => {
+                  setConstants((c) => ({ ...c, baseLogistic: x }))
+                }}
+              >
+                <SwitchControl>
+                  <SwitchThumb />
+                </SwitchControl>
+                <SwitchLabel>Logistic Base Growth</SwitchLabel>
+              </Switch>
+
               <NumberField
-                value={generation()}
-                defaultValue={120}
+                hidden={!constants().baseLogistic}
+                value={constants().baseCapacity}
+                defaultValue={1}
                 required
                 minValue={1}
-                // a very high value results in performance issues
-                maxValue={1200}
-                onChange={setGeneration}
+                onChange={(x) =>
+                  setConstants((c) => ({ ...c, baseCapacity: Number(x) }))
+                }
               >
-                <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
+                <NumberFieldLabel>Capacity</NumberFieldLabel>
                 <NumberFieldGroup>
                   <NumberFieldDecrementTrigger aria-label="Decrement" />
                   <NumberFieldInput />
@@ -108,68 +141,57 @@ export const Model = () => {
                 </NumberFieldGroup>
               </NumberField>
             </div>
-          </section>
-          <section class="m-2 mt-6 flex flex-col gap-4">
-            <h2>Logistic Growth</h2>
-            <div class="grid grid-cols-2 gap-8 ">
-              <div class="flex flex-col gap-4">
-                <Switch
-                  class="flex items-center space-x-2"
-                  checked={baseLogisticGrowth()}
-                  onChange={setBaseLogisticGrowth}
-                >
-                  <SwitchControl>
-                    <SwitchThumb />
-                  </SwitchControl>
-                  <SwitchLabel>Logistic Base Growth</SwitchLabel>
-                </Switch>
+            <div class="flex flex-col gap-4">
+              <Switch
+                class="flex items-center space-x-2"
+                checked={constants().colonyLogistic}
+                onChange={(x) => {
+                  setConstants((c) => ({ ...c, colonyLogistic: x }))
+                }}
+              >
+                <SwitchControl>
+                  <SwitchThumb />
+                </SwitchControl>
+                <SwitchLabel>Logistic Colony Growth</SwitchLabel>
+              </Switch>
 
-                <NumberField
-                  hidden={!baseLogisticGrowth()}
-                  value={baseCapacity()}
-                  defaultValue={1}
-                  required
-                  minValue={1}
-                  onChange={setBaseCapacity}
-                >
-                  <NumberFieldLabel>Capacity</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldDecrementTrigger aria-label="Decrement" />
-                    <NumberFieldInput />
-                    <NumberFieldIncrementTrigger aria-label="Increment" />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
-              <div class="flex flex-col gap-4">
-                <Switch
-                  class="flex items-center space-x-2"
-                  checked={colonyLogisticGrowth()}
-                  onChange={setColonyLogisticGrowth}
-                >
-                  <SwitchControl>
-                    <SwitchThumb />
-                  </SwitchControl>
-                  <SwitchLabel>Logistic Colony Growth</SwitchLabel>
-                </Switch>
-
-                <NumberField
-                  hidden={!colonyLogisticGrowth()}
-                  value={colonyCapacity()}
-                  defaultValue={1}
-                  required
-                  minValue={1}
-                  onChange={setColonyCapacity}
-                >
-                  <NumberFieldLabel>Capacity</NumberFieldLabel>
-                  <NumberFieldGroup>
-                    <NumberFieldDecrementTrigger aria-label="Decrement" />
-                    <NumberFieldInput />
-                    <NumberFieldIncrementTrigger aria-label="Increment" />
-                  </NumberFieldGroup>
-                </NumberField>
-              </div>
+              <NumberField
+                hidden={!constants().colonyLogistic}
+                value={constants().colonyCapacity}
+                defaultValue={1}
+                required
+                minValue={1}
+                onChange={(x) =>
+                  setConstants((c) => ({ ...c, colonyCapacity: Number(x) }))
+                }
+              >
+                <NumberFieldLabel>Capacity</NumberFieldLabel>
+                <NumberFieldGroup>
+                  <NumberFieldDecrementTrigger aria-label="Decrement" />
+                  <NumberFieldInput />
+                  <NumberFieldIncrementTrigger aria-label="Increment" />
+                </NumberFieldGroup>
+              </NumberField>
             </div>
-          </section>
+          </ConfigSection>
+          <ConfigSection title="Colonization Penalty">
+            <NumberField
+              value={constants().colonizationPenalty}
+              defaultValue={2}
+              required
+              minValue={1}
+              onChange={(x) =>
+                setConstants((c) => ({ ...c, colonizationPenalty: Number(x) }))
+              }
+            >
+              <NumberFieldLabel>Coefficient</NumberFieldLabel>
+              <NumberFieldGroup>
+                <NumberFieldDecrementTrigger aria-label="Decrement" />
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger aria-label="Increment" />
+              </NumberFieldGroup>
+            </NumberField>
+          </ConfigSection>
         </details>
       </CardFooter>
     </Card>

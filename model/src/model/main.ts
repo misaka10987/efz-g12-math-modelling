@@ -1,6 +1,8 @@
 export interface Constants {
   colonizationPenalty: number
+  baseLogistic: boolean
   baseCapacity?: number
+  colonyLogistic: boolean
   colonyCapacity?: number
 }
 
@@ -56,12 +58,20 @@ export const evaluate = (
     state.baseProductivity +=
       generationGrowth *
       decision.baseInvestment *
-      (1 - state.baseProductivity / (constants.baseCapacity ?? Infinity))
+      (1 -
+        state.baseProductivity /
+          (constants.baseLogistic
+            ? (constants.baseCapacity ?? Infinity)
+            : Infinity))
     state.colonyProductivity +=
       generationGrowth *
       (decision.colonyInvestment / constants.colonizationPenalty +
         state.colonyProductivity) *
-      (1 - state.colonyProductivity / (constants.colonyCapacity ?? Infinity))
+      (1 -
+        state.colonyProductivity /
+          (constants.colonyLogistic
+            ? (constants.colonyCapacity ?? Infinity)
+            : Infinity))
 
     data.push(structuredClone(state))
   }
