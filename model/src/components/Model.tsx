@@ -12,7 +12,6 @@ import { evaluate, neverColonize, porportionalColonize } from '@/model/main'
 export const Model = () => {
   const neverColonizeResult = evaluate(
     {
-      initialBaseProductivity: 1,
       colonizationPenalty: 5,
       baseCapacity: 10,
       colonyCapacity: 5,
@@ -23,7 +22,6 @@ export const Model = () => {
 
   const proportionalColonizeResult = evaluate(
     {
-      initialBaseProductivity: 1,
       colonizationPenalty: 5,
       baseCapacity: 10,
       colonyCapacity: 5,

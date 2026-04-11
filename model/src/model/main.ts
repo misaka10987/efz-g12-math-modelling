@@ -1,5 +1,4 @@
 export interface Constants {
-  initialBaseProductivity: number
   colonizationPenalty: number
   baseCapacity?: number
   colonyCapacity?: number
@@ -41,7 +40,7 @@ export const evaluate = (
   generation: number,
 ): CurrentState[] => {
   const state: CurrentState = {
-    baseProductivity: constants.initialBaseProductivity,
+    baseProductivity: 1,
     colonyProductivity: 0,
   }
   let data = [structuredClone(state)]
