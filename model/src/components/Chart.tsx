@@ -1,8 +1,31 @@
 import { createUniqueId, onMount } from 'solid-js'
 import ChartJS from 'chart.js/auto'
+import { evaluate, neverColonize, porportionalColonize } from '@/model/main'
 
 export const Chart = () => {
   const id = createUniqueId()
+
+  const neverColonizeResult = evaluate(
+    {
+      initialBaseProductivity: 100,
+      colonizationPenalty: 5,
+      baseCapacity: 1000,
+      colonyCapacity: 500,
+    },
+    neverColonize,
+    100,
+  )
+
+  const proportionalColonizeResult = evaluate(
+    {
+      initialBaseProductivity: 100,
+      colonizationPenalty: 5,
+      baseCapacity: 1000,
+      colonyCapacity: 500,
+    },
+    porportionalColonize(1 / 2),
+    100,
+  )
 
   onMount(() => {
     const canvas = document.getElementById(id) as HTMLCanvasElement
@@ -11,30 +34,31 @@ export const Chart = () => {
       data: {
         datasets: [
           {
-            label: 'Parabola',
-            data: [
-              { x: '1', y: 1 },
-              { x: '2', y: 4 },
-              { x: '3', y: 9 },
-              { x: '4', y: 16 },
-              { x: '5', y: 25 },
-            ],
+            label: 'Never Colonize',
+            data: neverColonizeResult.map((state, index) => ({
+              x: `${index}`,
+              y: state.baseProductivity + state.colonyProductivity,
+            })),
             borderWidth: 1,
           },
           {
-            label: 'Exponential',
-            data: [
-              { x: '1', y: 2 },
-              { x: '2', y: 4 },
-              { x: '3', y: 8 },
-              { x: '4', y: 16 },
-              { x: '5', y: 32 },
-            ],
+            label: 'Proportional Colonize',
+            data: proportionalColonizeResult.map((state, index) => ({
+              x: `${index}`,
+              y: state.baseProductivity + state.colonyProductivity,
+            })),
             borderWidth: 1,
           },
         ],
       },
       options: {
+        elements: {
+          point: {
+            radius: 0,
+            hoverRadius: 4,
+            hitRadius: 10,
+          },
+        },
         scales: {
           y: {
             beginAtZero: true,
@@ -45,10 +69,8 @@ export const Chart = () => {
   })
 
   return (
-    <>
-      <div>
-        <canvas id={id}></canvas>
-      </div>
-    </>
+    <div>
+      <canvas id={id}></canvas>
+    </div>
   )
 }

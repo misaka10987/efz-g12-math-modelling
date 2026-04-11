@@ -1,30 +1,30 @@
-interface Constants {
+export interface Constants {
   initialBaseProductivity: number
   colonizationPenalty: number
-  baseCapacity: number
-  colonyCapacity: number
+  baseCapacity?: number
+  colonyCapacity?: number
 }
 
-interface CurrentState {
+export interface CurrentState {
   baseProductivity: number
   colonyProductivity: number
 }
 
-interface Decision {
+export interface Decision {
   baseInvestment: number
   colonyInvestment: number
 }
 
 type Strategy = (state: CurrentState, constants: Constants) => Decision
 
-const neverColonize: Strategy = (state, constants) => {
+export const neverColonize: Strategy = (state, constants) => {
   return {
     baseInvestment: state.baseProductivity,
     colonyInvestment: 0,
   }
 }
 
-const porportionalColonize =
+export const porportionalColonize =
   (k: number): Strategy =>
   (state, constants) => {
     const colonyInvestment = state.baseProductivity * k
@@ -35,15 +35,16 @@ const porportionalColonize =
     }
   }
 
-const evaluate = (
+export const evaluate = (
   constants: Constants,
   strategy: Strategy,
   generation: number,
-): number => {
+): CurrentState[] => {
   const state: CurrentState = {
     baseProductivity: constants.initialBaseProductivity,
     colonyProductivity: 0,
   }
+  let data = [structuredClone(state)]
   for (
     let currentGeneration = 0;
     currentGeneration < generation;
@@ -56,38 +57,14 @@ const evaluate = (
     state.baseProductivity +=
       generationGrowth *
       decision.baseInvestment *
-      (1 - state.baseProductivity / constants.baseCapacity)
+      (1 - state.baseProductivity / (constants.baseCapacity ?? Infinity))
     state.colonyProductivity +=
       generationGrowth *
       (decision.colonyInvestment / constants.colonizationPenalty +
         state.colonyProductivity) *
-      (1 - state.colonyProductivity / constants.colonyCapacity)
+      (1 - state.colonyProductivity / (constants.colonyCapacity ?? Infinity))
+
+    data.push(structuredClone(state))
   }
-  return state.baseProductivity + state.colonyProductivity
+  return data
 }
-
-const result1 = evaluate(
-  {
-    initialBaseProductivity: 100,
-    colonizationPenalty: 2,
-    baseCapacity: 1000,
-    colonyCapacity: 500,
-  },
-  neverColonize,
-  120,
-)
-
-console.info(`Total productivity after 120 generations: ${result1}`)
-
-const result2 = evaluate(
-  {
-    initialBaseProductivity: 100,
-    colonizationPenalty: 2,
-    baseCapacity: 1000,
-    colonyCapacity: 500,
-  },
-  porportionalColonize(0.5),
-  120,
-)
-
-console.info(`Total productivity after 120 generations: ${result2}`)
