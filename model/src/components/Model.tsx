@@ -30,6 +30,8 @@ import {
   NumberFieldInput,
   NumberFieldLabel,
 } from './shadcn-solid/numberfield'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './shadcn-solid/tabs'
+import type { ChartDataset } from 'chart.js'
 
 const ConfigSection = (props: { title: string; children?: any }) => {
   return (
@@ -52,6 +54,19 @@ export const Model = () => {
 
   const [generation, setGeneration] = createSignal(120)
 
+  const [neverColonizeEnabled, setNeverColonizeEnabled] = createSignal(true)
+
+  const [proportionalColonizeEnabled, setProportionalColonizeEnabled] =
+    createSignal(false)
+
+  const [pieceWiseColoniseEnabled, setPieceWiseColoniseEnabled] =
+    createSignal(false)
+
+  const [
+    differentialGreedyColonizeEnabled,
+    setDifferentialGreedyColonizeEnabled,
+  ] = createSignal(false)
+
   const neverColonizeResult = createMemo(() => {
     return evaluate(constants(), neverColonize, generation())
   })
@@ -66,33 +81,45 @@ export const Model = () => {
       pieceWiseColonise(1 / 2, 1 / 2),
       generation(),
     )
-    return [
-      {
+
+    const data: ChartDataset[] = []
+
+    if (neverColonizeEnabled()) {
+      data.push({
         label: 'Never Colonize',
         data: neverColonizeResult().map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),
         borderWidth: 1,
-      },
-      {
-        label: 'Proportional Colonize',
+      })
+    }
+
+    if (proportionalColonizeEnabled()) {
+      data.push({
+        label: 'Proportional',
         data: proportionalColonizeResult().map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),
         borderWidth: 1,
-      },
-      {
-        label: 'Piecewise Colonize',
+      })
+    }
+
+    if (pieceWiseColoniseEnabled()) {
+      data.push({
+        label: 'Piecewise',
         data: piecewiseColonizeResult.map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),
         borderWidth: 1,
-      },
-      {
-        label: 'Greedy Colonize',
+      })
+    }
+
+    if (differentialGreedyColonizeEnabled()) {
+      data.push({
+        label: 'Greedy Differential',
         data: evaluate(
           constants(),
           differentialGreedyColonize,
@@ -102,8 +129,10 @@ export const Model = () => {
           y: state.baseProductivity + state.colonyProductivity,
         })),
         borderWidth: 1,
-      },
-    ]
+      })
+    }
+
+    return data
   })
 
   return (
@@ -118,128 +147,199 @@ export const Model = () => {
       <CardFooter>
         <details class="w-full">
           <summary class="font-semibold">Parameters</summary>
-          <ConfigSection title="Generic">
-            <NumberField
-              value={generation()}
-              defaultValue={120}
-              required
-              minValue={1}
-              // a very high value results in performance issues
-              maxValue={1200}
-              onChange={(x) => setGeneration(parseFloat(x))}
-            >
-              <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
-              <NumberFieldGroup>
-                <NumberFieldDecrementTrigger aria-label="Decrement" />
-                <NumberFieldInput />
-                <NumberFieldIncrementTrigger aria-label="Increment" />
-              </NumberFieldGroup>
-            </NumberField>
-          </ConfigSection>
-          <ConfigSection title="Logistic Growth">
-            <div class="flex flex-col gap-4">
-              <Switch
-                class="flex items-center space-x-2"
-                checked={constants().baseLogistic}
-                onChange={(x) => {
-                  setConstants((c) => ({ ...c, baseLogistic: x }))
-                }}
-              >
-                <SwitchControl>
-                  <SwitchThumb />
-                </SwitchControl>
-                <SwitchLabel>Logistic Base Growth</SwitchLabel>
-              </Switch>
+          <Tabs defaultValue="constants" class="w-full mt-6">
+            <TabsList>
+              <TabsTrigger class="data-selected:bg-accent" value="constants">
+                Constants
+              </TabsTrigger>
+              <TabsTrigger class="data-selected:bg-accent" value="strategies">
+                Strategies
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="constants">
+              <ConfigSection title="Generic">
+                <NumberField
+                  value={generation()}
+                  defaultValue={120}
+                  required
+                  minValue={1}
+                  // a very high value results in performance issues
+                  maxValue={1200}
+                  onChange={(x) => setGeneration(parseFloat(x))}
+                >
+                  <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
+                  <NumberFieldGroup>
+                    <NumberFieldDecrementTrigger aria-label="Decrement" />
+                    <NumberFieldInput />
+                    <NumberFieldIncrementTrigger aria-label="Increment" />
+                  </NumberFieldGroup>
+                </NumberField>
+              </ConfigSection>
+              <ConfigSection title="Logistic Growth">
+                <div class="flex flex-col gap-4">
+                  <Switch
+                    class="flex items-center space-x-2"
+                    checked={constants().baseLogistic}
+                    onChange={(x) => {
+                      setConstants((c) => ({ ...c, baseLogistic: x }))
+                    }}
+                  >
+                    <SwitchControl>
+                      <SwitchThumb />
+                    </SwitchControl>
+                    <SwitchLabel>Logistic Base Growth</SwitchLabel>
+                  </Switch>
 
-              <NumberField
-                hidden={!constants().baseLogistic}
-                value={constants().baseCapacity}
-                defaultValue={1}
-                required
-                minValue={1}
-                onChange={(x) =>
-                  setConstants((c) => ({ ...c, baseCapacity: parseFloat(x) }))
-                }
-              >
-                <NumberFieldLabel>Capacity</NumberFieldLabel>
-                <NumberFieldGroup>
-                  <NumberFieldDecrementTrigger aria-label="Decrement" />
-                  <NumberFieldInput />
-                  <NumberFieldIncrementTrigger aria-label="Increment" />
-                </NumberFieldGroup>
-              </NumberField>
-            </div>
-            <div class="flex flex-col gap-4">
-              <Switch
-                class="flex items-center space-x-2"
-                checked={constants().colonyLogistic}
-                onChange={(x) => {
-                  setConstants((c) => ({ ...c, colonyLogistic: x }))
-                }}
-              >
-                <SwitchControl>
-                  <SwitchThumb />
-                </SwitchControl>
-                <SwitchLabel>Logistic Colony Growth</SwitchLabel>
-              </Switch>
+                  <NumberField
+                    hidden={!constants().baseLogistic}
+                    value={constants().baseCapacity}
+                    defaultValue={1}
+                    required
+                    minValue={1}
+                    onChange={(x) =>
+                      setConstants((c) => ({
+                        ...c,
+                        baseCapacity: parseFloat(x),
+                      }))
+                    }
+                  >
+                    <NumberFieldLabel>Capacity</NumberFieldLabel>
+                    <NumberFieldGroup>
+                      <NumberFieldDecrementTrigger aria-label="Decrement" />
+                      <NumberFieldInput />
+                      <NumberFieldIncrementTrigger aria-label="Increment" />
+                    </NumberFieldGroup>
+                  </NumberField>
+                </div>
+                <div class="flex flex-col gap-4">
+                  <Switch
+                    class="flex items-center space-x-2"
+                    checked={constants().colonyLogistic}
+                    onChange={(x) => {
+                      setConstants((c) => ({ ...c, colonyLogistic: x }))
+                    }}
+                  >
+                    <SwitchControl>
+                      <SwitchThumb />
+                    </SwitchControl>
+                    <SwitchLabel>Logistic Colony Growth</SwitchLabel>
+                  </Switch>
 
-              <NumberField
-                hidden={!constants().colonyLogistic}
-                value={constants().colonyCapacity}
-                defaultValue={1}
-                required
-                minValue={1}
-                onChange={(x) =>
-                  setConstants((c) => ({ ...c, colonyCapacity: parseFloat(x) }))
-                }
-              >
-                <NumberFieldLabel>Capacity</NumberFieldLabel>
-                <NumberFieldGroup>
-                  <NumberFieldDecrementTrigger aria-label="Decrement" />
-                  <NumberFieldInput />
-                  <NumberFieldIncrementTrigger aria-label="Increment" />
-                </NumberFieldGroup>
-              </NumberField>
-            </div>
-          </ConfigSection>
-          <ConfigSection title="Colonization Penalty">
-            <NumberField
-              value={constants().colonizationCost}
-              defaultValue={2}
-              required
-              minValue={1}
-              onChange={(x) =>
-                setConstants((c) => ({ ...c, colonizationCost: parseFloat(x) }))
-              }
-            >
-              <NumberFieldLabel>Coefficient Cost</NumberFieldLabel>
-              <NumberFieldGroup>
-                <NumberFieldDecrementTrigger aria-label="Decrement" />
-                <NumberFieldInput />
-                <NumberFieldIncrementTrigger aria-label="Increment" />
-              </NumberFieldGroup>
-            </NumberField>
+                  <NumberField
+                    hidden={!constants().colonyLogistic}
+                    value={constants().colonyCapacity}
+                    defaultValue={1}
+                    required
+                    minValue={1}
+                    onChange={(x) =>
+                      setConstants((c) => ({
+                        ...c,
+                        colonyCapacity: parseFloat(x),
+                      }))
+                    }
+                  >
+                    <NumberFieldLabel>Capacity</NumberFieldLabel>
+                    <NumberFieldGroup>
+                      <NumberFieldDecrementTrigger aria-label="Decrement" />
+                      <NumberFieldInput />
+                      <NumberFieldIncrementTrigger aria-label="Increment" />
+                    </NumberFieldGroup>
+                  </NumberField>
+                </div>
+              </ConfigSection>
+              <ConfigSection title="Colonization Penalty">
+                <NumberField
+                  value={constants().colonizationCost}
+                  defaultValue={2}
+                  required
+                  minValue={1}
+                  onChange={(x) =>
+                    setConstants((c) => ({
+                      ...c,
+                      colonizationCost: parseFloat(x),
+                    }))
+                  }
+                >
+                  <NumberFieldLabel>Coefficient Cost</NumberFieldLabel>
+                  <NumberFieldGroup>
+                    <NumberFieldDecrementTrigger aria-label="Decrement" />
+                    <NumberFieldInput />
+                    <NumberFieldIncrementTrigger aria-label="Increment" />
+                  </NumberFieldGroup>
+                </NumberField>
 
-            <NumberField
-              value={constants().colonizationDelay}
-              defaultValue={1}
-              required
-              minValue={0}
-              onChange={(x) =>
-                setConstants((c) => ({
-                  ...c,
-                  colonizationDelay: parseFloat(x),
-                }))
-              }
-            >
-              <NumberFieldLabel>Delay</NumberFieldLabel>
-              <NumberFieldGroup>
-                <NumberFieldDecrementTrigger aria-label="Decrement" />
-                <NumberFieldInput />
-                <NumberFieldIncrementTrigger aria-label="Increment" />
-              </NumberFieldGroup>
-            </NumberField>
-          </ConfigSection>
+                <NumberField
+                  value={constants().colonizationDelay}
+                  defaultValue={1}
+                  required
+                  minValue={0}
+                  onChange={(x) =>
+                    setConstants((c) => ({
+                      ...c,
+                      colonizationDelay: parseFloat(x),
+                    }))
+                  }
+                >
+                  <NumberFieldLabel>Delay</NumberFieldLabel>
+                  <NumberFieldGroup>
+                    <NumberFieldDecrementTrigger aria-label="Decrement" />
+                    <NumberFieldInput />
+                    <NumberFieldIncrementTrigger aria-label="Increment" />
+                  </NumberFieldGroup>
+                </NumberField>
+              </ConfigSection>
+            </TabsContent>
+            <TabsContent value="strategies">
+              <ConfigSection title="Never Colonize">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={neverColonizeEnabled()}
+                  onChange={setNeverColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Proportional">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={proportionalColonizeEnabled()}
+                  onChange={setProportionalColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Piecewise">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={pieceWiseColoniseEnabled()}
+                  onChange={setPieceWiseColoniseEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Greedy Differential Algorithm">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={differentialGreedyColonizeEnabled()}
+                  onChange={setDifferentialGreedyColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+            </TabsContent>
+          </Tabs>
         </details>
       </CardFooter>
     </Card>
