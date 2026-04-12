@@ -1,3 +1,5 @@
+export const GENERATION_GROWTH = 2 ** (1 / 12) - 1
+
 export interface Constants {
   colonizationCost: number
   colonizationDelay: number
@@ -63,7 +65,9 @@ export const differentialGreedyColonize: Strategy = (state, constants) => {
 
   const diffBase = baseLogisticFactor
 
-  const diffColony = colonyLogisticFactor / constants.colonizationCost
+  const diffColony =
+    (colonyLogisticFactor / constants.colonizationCost) *
+    (1 / (1 + GENERATION_GROWTH)) ** constants.colonizationDelay
 
   if (diffBase > diffColony) {
     return {
@@ -76,18 +80,6 @@ export const differentialGreedyColonize: Strategy = (state, constants) => {
       colonyInvestment: state.baseProductivity,
     }
   }
-
-  // if (diffBase > colonyGrowth) {
-  //   return {
-  //     baseInvestment: state.baseProductivity,
-  //     colonyInvestment: 0,
-  //   }
-  // } else {
-  //   return {
-  //     baseInvestment: 0,
-  //     colonyInvestment: state.baseProductivity,
-  //   }
-  // }
 }
 
 export const evaluate = (
