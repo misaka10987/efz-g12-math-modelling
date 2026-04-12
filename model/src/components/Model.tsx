@@ -15,6 +15,8 @@ import {
   pieceWiseColonise,
   porportionalColonize,
   type Constants,
+  eulerColonize,
+  hybridColonize,
 } from '@/model/main'
 import {
   Switch,
@@ -80,6 +82,10 @@ export const Model = () => {
   const [softGreedyColonizeEnabled, setSoftGreedyColonizeEnabled] =
     createSignal(false)
 
+  const [eulerColonizeEnabled, setEulerColonizeEnabled] = createSignal(false)
+
+  const [hybridColonizeEnabled, setHybridColonizeEnabled] = createSignal(false)
+
   const neverColonizeResult = createMemo(() => {
     return evaluate(constants(), neverColonize)
   })
@@ -144,6 +150,28 @@ export const Model = () => {
       data.push({
         label: 'Soft Greedy',
         data: evaluate(constants(), softGreedyColonize).map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
+        borderWidth: 1,
+      })
+    }
+
+    if (eulerColonizeEnabled()) {
+      data.push({
+        label: 'Euler',
+        data: evaluate(constants(), eulerColonize).map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
+        borderWidth: 1,
+      })
+    }
+
+    if (hybridColonizeEnabled()) {
+      data.push({
+        label: 'Hybrid',
+        data: evaluate(constants(), hybridColonize).map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),
@@ -391,6 +419,30 @@ export const Model = () => {
                   class="flex items-center space-x-2"
                   checked={softGreedyColonizeEnabled()}
                   onChange={setSoftGreedyColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Approximation Euler">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={eulerColonizeEnabled()}
+                  onChange={setEulerColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Hybrid Proportional-Euler">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={hybridColonizeEnabled()}
+                  onChange={setHybridColonizeEnabled}
                 >
                   <SwitchControl>
                     <SwitchThumb />
