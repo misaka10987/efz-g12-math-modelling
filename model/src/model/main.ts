@@ -111,7 +111,7 @@ export const evaluate = (
     const decision = strategy(state, constants)
     if (
       decision.baseInvestment + decision.colonyInvestment >
-      state.baseProductivity
+      state.baseProductivity + 0.001 // float precision
     ) {
       throw new Error()
     }

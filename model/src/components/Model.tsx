@@ -32,6 +32,15 @@ import {
 } from './shadcn-solid/numberfield'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './shadcn-solid/tabs'
 import type { ChartDataset } from 'chart.js'
+import {
+  Slider,
+  SliderFill,
+  SliderLabel,
+  SliderThumb,
+  SliderTrack,
+  SliderValueLabel,
+} from './solid-ui/slider'
+import debounce from 'debounce'
 
 const ConfigSection = (props: { title: string; children?: any }) => {
   return (
@@ -59,6 +68,10 @@ export const Model = () => {
   const [proportionalColonizeEnabled, setProportionalColonizeEnabled] =
     createSignal(false)
 
+  const [proportion, setProportion] = createSignal(1 / 2)
+  const [proportionSlider, setProportionSlider] = createSignal(proportion())
+  const handleProportionChange = debounce(setProportion, 100)
+
   const [pieceWiseColoniseEnabled, setPieceWiseColoniseEnabled] =
     createSignal(false)
 
@@ -72,7 +85,11 @@ export const Model = () => {
   })
 
   const proportionalColonizeResult = createMemo(() => {
-    return evaluate(constants(), porportionalColonize(1 / 2), generation())
+    return evaluate(
+      constants(),
+      porportionalColonize(proportion()),
+      generation(),
+    )
   })
 
   const data = createMemo(() => {
@@ -313,6 +330,30 @@ export const Model = () => {
                   </SwitchControl>
                   <SwitchLabel>Enabled</SwitchLabel>
                 </Switch>
+                <Slider
+                  hidden={!proportionalColonizeEnabled()}
+                  minValue={0}
+                  maxValue={1}
+                  step={0.001}
+                  value={[proportionSlider()]}
+                  onChange={(x) => {
+                    if (!isNaN(x[0])) {
+                      setProportionSlider(x[0])
+                      handleProportionChange(x[0])
+                    }
+                  }}
+                  getValueLabel={(params) => `${params.values[0]}`}
+                  class="space-y-3"
+                >
+                  <div class="flex w-full justify-between">
+                    <SliderLabel>Colonize Proportion</SliderLabel>
+                    <SliderValueLabel />
+                  </div>
+                  <SliderTrack>
+                    <SliderFill class="bg-foreground" />
+                    <SliderThumb class="border-muted-foreground bg-muted" />
+                  </SliderTrack>
+                </Slider>
               </ConfigSection>
               <ConfigSection title="Piecewise">
                 <Switch
