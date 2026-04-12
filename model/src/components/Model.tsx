@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from './shadcn-solid/Card'
 import {
+  differentialGreedyColonize,
   evaluate,
   neverColonize,
   pieceWiseColonise,
@@ -85,6 +86,18 @@ export const Model = () => {
       {
         label: 'Piecewise Colonize',
         data: piecewiseColonizeResult.map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
+        borderWidth: 1,
+      },
+      {
+        label: 'Greedy Colonize',
+        data: evaluate(
+          constants(),
+          differentialGreedyColonize,
+          generation(),
+        ).map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),
