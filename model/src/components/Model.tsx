@@ -8,16 +8,11 @@ import {
   CardTitle,
 } from './shadcn-solid/Card'
 import {
-  softGreedyColonize,
-  greedyColonize,
   evaluate,
   neverColonize,
-  pieceWiseColonise,
   porportionalColonize,
   type Constants,
-  eulerColonize,
-  hybridColonize,
-} from '@/model/main'
+} from '@/model'
 import {
   Switch,
   SwitchControl,
@@ -44,6 +39,9 @@ import {
   SliderValueLabel,
 } from './solid-ui/slider'
 import debounce from 'debounce'
+import { greedyColonize, softGreedyColonize } from '@/model/greedy'
+import { eulerColonize, hybridColonize } from '@/model/euler'
+import { pieceWiseColonise } from '@/model/piecewise'
 
 const ConfigSection = (props: { title: string; children?: any }) => {
   return (

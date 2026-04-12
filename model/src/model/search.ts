@@ -1,4 +1,4 @@
-import { evaluate, pieceWiseColonise } from './main'
+import { evaluate, pieceWiseColonise } from '.'
 
 let best_threshold = 0
 let best_k = 0
