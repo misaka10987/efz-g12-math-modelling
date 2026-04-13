@@ -264,8 +264,8 @@
       node distance=0.4cm and 0.6cm
     ]
       \node[l1g] (cat1) {基线策略};
-      \node[l1b, right=2.5cm of cat1] (cat2) {启发式策略};
-      \node[l1d, right=2.5cm of cat2] (cat3) {优化策略};
+      \node[l1b, right=1.5cm of cat1] (cat2) {启发式策略};
+      \node[l1d, right=1.5cm of cat2] (cat3) {优化策略};
 
       \node[l2g, below=of cat1] (s1) {永不殖民};
       \node[l2g, below=of s1] (s2) {固定比例};
@@ -504,94 +504,6 @@
 \end{frame}
 
 % ═══════════════════════════════════════════════════════════
-\section{可视化平台实现}
-% ═══════════════════════════════════════════════════════════
-
-\begin{frame}{可视化平台——交互功能展示}
-  \begin{columns}[T]
-    \begin{column}{0.55\textwidth}
-      \textbf{平台特性：}
-      \begin{itemize}
-        \item \textbf{实时参数调节}——代数、成本、延迟、双星容量均可动态调整
-        \item \textbf{策略自由叠加}——7种策略可任意组合，同一图表对比
-        \item \textbf{折线图同步展示}——X轴为代际，Y轴为净生产力
-        \item \textbf{暗色模式}——支持界面主题切换
-      \end{itemize}
-
-      \vspace{0.3cm}
-      \textbf{设计理念：}
-      \begin{itemize}
-        \item 纯前端计算，零后端依赖
-        \item 参数变化即时反映到图表
-        \item 通过可视化直观理解\textbf{策略差异的根本原因}
-      \end{itemize}
-    \end{column}
-    \begin{column}{0.42\textwidth}
-      % 模拟平台界面的简化示意图
-      \begin{tikzpicture}[scale=0.75, every node/.style={font=\footnotesize}]
-        % 模拟图表区域
-        \draw[rounded corners=4pt, fill=mainblue!5, thick]
-              (0,0) rectangle (6,4.5);
-        \node[font=\small\bfseries, mainblue] at (3,4.2) {模型可视化平台};
-
-        % 坐标轴
-        \draw[-{Stealth}, thick] (0.5,0.5) -- (5.8,0.5)
-              node[right, font=\tiny] {代际};
-        \draw[-{Stealth}, thick] (0.5,0.5) -- (0.5,3.8)
-              node[above, font=\tiny] {净生产力};
-
-        % 模拟曲线
-        \draw[thick, mainblue]
-              (0.5,0.5) .. controls (1.5,1.0) and (2.5,2.0) .. (4.0,2.8)
-              .. controls (4.8,3.2) and (5.2,3.3) .. (5.6,3.35);
-        \draw[thick, accentred, dashed]
-              (0.5,0.5) .. controls (1.2,0.7) and (2.0,1.2) .. (3.0,2.0)
-              .. controls (4.0,3.0) and (5.0,3.5) .. (5.6,3.6);
-        \draw[thick, darkgreen, dotted]
-              (0.5,0.5) .. controls (1.5,0.9) and (2.0,1.8) .. (3.5,2.9)
-              .. controls (4.5,3.5) and (5.3,3.7) .. (5.6,3.75);
-
-        % 图例
-        \draw[thick, mainblue] (1.0,1.2) -- (1.6,1.2)
-              node[right, black, font=\tiny] {永不殖民};
-        \draw[thick, accentred, dashed] (1.0,0.9) -- (1.6,0.9)
-              node[right, black, font=\tiny] {Euler--Lagrange};
-        \draw[thick, darkgreen, dotted] (1.0,0.6) -- (1.6,0.6)
-              node[right, black, font=\tiny] {混合Euler};
-
-        % 参数面板示意
-        \node[draw, fill=white, rounded corners=2pt,
-              font=\tiny, align=left, anchor=north west]
-              at (3.2,1.8) {
-              代数: 120\\
-              成本: 5\\
-              延迟: 1\\
-              母星容量: 10\\
-              殖民容量: 5
-        };
-      \end{tikzpicture}
-    \end{column}
-  \end{columns}
-
-  \note{
-    第四部分是我们的可视化平台。这是我们用TypeScript开发的一个交互式网页工具。
-
-    平台的核心特性包括：第一，所有参数都可以实时调节——
-    代数、殖民成本、延迟、双星容量，调节后图表即时更新。
-    第二，7种策略可以任意组合叠加在同一张图表上对比。
-    第三，以折线图展示各策略的净生产力随代际的变化趋势。
-
-    我们的实现采用纯前端计算，不需要后端服务器。
-    模型引擎完全在浏览器中运行，参数变化后立即重新计算并更新图表。
-    这使得用户可以快速探索不同参数组合下的策略表现，
-    直观地理解为什么某些策略在某些条件下更优。
-
-    右侧的示意图模拟了平台的界面，展示了三条典型策略曲线的对比。
-    可以看到，优化策略在后期明显超越了基线策略。
-  }
-\end{frame}
-
-% ═══════════════════════════════════════════════════════════
 \section{结果分析与讨论}
 % ═══════════════════════════════════════════════════════════
 
@@ -692,61 +604,6 @@
     如果殖民地没有容量限制，那么复利可以无限放大，
     早期全仓投入殖民地可能是最优的。
     但如果两颗星球都有容量上限，那么需要更加精细的影子价格比例分配。
-  }
-\end{frame}
-
-\begin{frame}{对"早熟陷阱 vs. 迟滞风险"的回答}
-  \begin{columns}[T]
-    \begin{column}{0.48\textwidth}
-      \begin{alertblock}{早熟陷阱}
-        \begin{itemize}
-          \item 过早大规模殖民$\Rightarrow$单位成本极高
-          \item 母星研发能力被削弱
-          \item 殖民地尚未形成自增强
-        \end{itemize}
-        \vspace{0.1cm}
-        {\small $\Rightarrow$ 模型中体现为高成本系数+低殖民地初值}
-      \end{alertblock}
-    \end{column}
-    \begin{column}{0.48\textwidth}
-      \begin{block}{迟滞风险}
-        \begin{itemize}
-          \item 过晚启动殖民$\Rightarrow$母星逼近容量上限
-          \item 剩余生产力不足以支撑大规模殖民
-          \item 延迟折现吞噬殖民回报
-        \end{itemize}
-        \vspace{0.1cm}
-        {\small $\Rightarrow$ 模型中体现为高Logistic饱和度+复利折现}
-      \end{block}
-    \end{column}
-  \end{columns}
-
-  \vspace{0.4cm}
-  \begin{exampleblock}{模型结论}
-    \textbf{最优窗口}：当母星利用率达到约$0.5$--$0.7$时启动殖民，
-    兼顾母星积累与殖民回报。影子价格方法能\textbf{自动捕捉}这一最优时机，
-    无需手动设定阈值。
-  \end{exampleblock}
-
-  \note{
-    回到开题时提出的核心问题：早熟陷阱与迟滞风险之间如何权衡？
-
-    早熟陷阱在模型中表现为：殖民成本系数高、殖民地初始生产力为零。
-    如果过早投入，投入的大部分被成本系数吞噬，
-    母星也因为减少了再投资而增长放缓，两头不讨好。
-
-    迟滞风险则表现为：母星已经接近Logistic上限，
-    增长率趋近于零。此时就算想殖民，也没有足够的剩余生产力来支撑，
-    加上延迟折现，殖民回报被严重侵蚀。
-
-    我们的模型给出的答案是：存在一个最优窗口，
-    大约在母星利用率达到50%到70%之间。
-    在这个区间启动殖民，既能保证母星已经有足够的技术积累
-    使殖民成本效益合理，又能在母星饱和之前充分利用复利效应。
-
-    更重要的是，影子价格方法能自动捕捉这个最优时机，
-    不需要人为设定阈值。当殖民地的影子价格超过母星时，
-    策略会自然增加殖民投入——这正是最优控制理论的美妙之处。
   }
 \end{frame}
 
