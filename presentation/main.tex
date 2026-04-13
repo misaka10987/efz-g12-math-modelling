@@ -1,0 +1,907 @@
+\documentclass[aspectratio=169, 11pt]{beamer}
+
+% ═══════════════════════════════════════════════════════════
+% 中文支持 & 数学
+% ═══════════════════════════════════════════════════════════
+\usepackage{ctex}
+\usepackage{amsmath,amssymb,bm}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,shapes.geometric,decorations.pathreplacing}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{appendixnumberbeamer}
+
+% ═══════════════════════════════════════════════════════════
+% 主题 & 配色
+% ═══════════════════════════════════════════════════════════
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+\setbeamerfont{footnote}{size=\tiny}
+
+% 自定义颜色
+\definecolor{mainblue}{RGB}{0,82,155}
+\definecolor{accentred}{RGB}{180,40,40}
+\definecolor{darkgreen}{RGB}{0,120,60}
+\setbeamercolor{title}{fg=white,bg=mainblue}
+\setbeamercolor{frametitle}{fg=white,bg=mainblue}
+\setbeamercolor{block title}{fg=white,bg=mainblue!80}
+\setbeamercolor{block body}{bg=mainblue!8}
+\setbeamercolor{block title alerted}{fg=white,bg=accentred}
+\setbeamercolor{block body alerted}{bg=accentred!8}
+\setbeamercolor{block title example}{fg=white,bg=darkgreen}
+\setbeamercolor{block body example}{bg=darkgreen!8}
+\setbeamercolor{item}{fg=mainblue}
+
+% ═══════════════════════════════════════════════════════════
+% 讲稿模式（取消下行注释可在第二屏显示讲稿）
+% \setbeameroption{show notes on second screen=right}
+% ═══════════════════════════════════════════════════════════
+
+% ═══════════════════════════════════════════════════════════
+% 元信息
+% ═══════════════════════════════════════════════════════════
+\title{空间探索的经济性优化方案}
+\subtitle{数学建模结题报告}
+\author{苏建坤，陈宇翔，贺致远}
+\date{2026年4月}
+
+\begin{document}
+
+% ═══════════════════════════════════════════════════════════
+% 封面
+% ═══════════════════════════════════════════════════════════
+\begin{frame}[plain]
+  \titlepage
+  \note{
+    各位老师、同学们，大家好。今天向大家汇报我们的结题成果——
+    《空间探索的经济性优化方案》。本项目旨在通过数学建模手段，探讨在资源、技术与环境的多重约束下，
+    如何实现空间探索的最优经济路径。接下来我们将从选题背景、模型建立、求解策略、
+    可视化实现以及结果分析五个方面展开汇报。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+% 目录
+% ═══════════════════════════════════════════════════════════
+\begin{frame}{汇报提纲}
+  \tableofcontents
+  \note{
+    我们的汇报分为以下五个部分：首先回顾选题背景与动机，说明我们为什么要研究这个问题；
+    第二部分是模型的建立，包括问题抽象和数学模型的构建；第三部分介绍我们设计的多种求解策略；
+    第四部分展示我们的可视化平台实现；最后是结果分析与讨论，以及总结展望。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{选题背景与动机}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{选题背景与动机}
+  \begin{columns}[T]
+    \begin{column}{0.52\textwidth}
+      \begin{itemize}\setlength{\itemsep}{3pt}
+        \item 商业航天突破：SpaceX 火箭回收降低发射成本
+        \item 空间探索演变为\textbf{经济学命题}
+        \item 核心矛盾：何时、以何种比例投入殖民？
+        \item 关键权衡：
+        \begin{itemize}
+          \item[\textcolor{accentred}{\textbullet}] \textbf{早熟陷阱}——过早投入导致经济失衡
+          \item[\textcolor{mainblue}{\textbullet}] \textbf{迟滞风险}——资源枯竭后丧失探索能力
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.45\textwidth}
+      \resizebox{\linewidth}{!}{%
+      \begin{tikzpicture}[
+        box/.style={draw, rounded corners=3pt, minimum width=2.2cm,
+                    minimum height=0.7cm, align=center, font=\footnotesize},
+        arr/.style={-{Stealth[length=3pt]}, thick}
+      ]
+        \node[box, fill=mainblue!12] (earth) {母星生产力 $B(t)$};
+        \node[box, fill=mainblue!12, below=0.5cm of earth] (decision)
+              {资源分配决策};
+        \node[box, fill=darkgreen!12, left=0.2cm of decision, xshift=-0.5cm]
+              (base) {母星再投入};
+        \node[box, fill=accentred!12, right=0.2cm of decision, xshift=0.5cm]
+              (colony) {殖民投入};
+        \node[box, fill=darkgreen!12, below=0.5cm of decision]
+              (colony_p) {殖民地生产力 $C(t)$};
+        \draw[arr] (earth) -- (decision);
+        \draw[arr] (decision) -- (base);
+        \draw[arr] (decision) -- (colony);
+        \draw[arr, dashed] (colony) -- (colony_p);
+        \draw[arr, dashed] (base.west) to[out=-90,in=180] (earth.south west);
+      \end{tikzpicture}%
+      }
+    \end{column}
+  \end{columns}
+  \note{
+    我们的选题源自一个根本性的经济学问题：空间探索已经不再是纯粹的国家行为，
+    而是一个需要精打细算的经济决策。SpaceX通过火箭回收技术将发射成本降低了几个数量级，
+    这使得空间殖民从科幻走向了现实。
+
+    但核心矛盾在于——我们面临一个经典的时机选择问题。如果过早投入殖民，
+    基础科学和技术还不够成熟，单位成本极高，就像苏联的星球大战计划一样，
+    会拖垮母星经济。但如果投入太晚，母星资源枯竭、环境容量耗尽，
+    社会陷入存量竞争，就没有余力进行大规模空间探索了。
+
+    因此，我们的目标是找到一个最优的投入时序和比例，
+    使得在给定时间周期内系统的总产出最大化。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{模型的建立}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{问题抽象与基本假设}
+  \begin{block}{核心抽象：离散时间最优控制问题}
+    将空间殖民问题建模为\textbf{双星球资源分配博弈}：
+    每一代需决策总生产力在"母星再投资"与"殖民投入"之间的分配比例。
+  \end{block}
+  \vspace{0.3cm}
+  \textbf{关键假设：}
+  \begin{enumerate}
+    \item 生产力以指数基线增长，受环境容量约束（Logistic模型）
+    \item 殖民投入存在\textbf{成本系数}惩罚和\textbf{时间延迟}
+    \item 殖民地具备\textbf{自增强}机制——已有生产力可产生复利
+    \item 双星球各自拥有独立的环境容量上限
+  \end{enumerate}
+  \vspace{0.3cm}
+  \begin{alertblock}{目标函数}
+    $\displaystyle \max\;\bigl[B(T) + C(T)\bigr]$ —— 终态总生产力最大化
+  \end{alertblock}
+  \note{
+    接下来进入第二部分——模型的建立。
+
+    我们的核心思路是将空间殖民问题抽象为一个离散时间最优控制问题。
+    想象你有两颗星球：母星和殖民地。每一代，你需要决定把多少生产力用于母星自身发展，
+    多少用于殖民。这个决策就像投资组合分配一样。
+
+    我们做了四个关键假设。第一，生产力服从指数增长但有上限——这就是Logistic模型，
+    类似于地球资源承载力有限。第二，殖民不是免费的，有成本系数和时间延迟，
+    比如运输成本和建基地的时间。第三，殖民地一旦启动，它自身的生产力也能产生复利，
+    这就像一个复利引擎。第四，两颗星球各有各的容量上限。
+
+    我们的目标很简单：在T代之后，让两颗星球的生产力之和最大化。
+  }
+\end{frame}
+
+\begin{frame}{数学模型构建}
+  \textbf{1. 母星更新方程：}
+  \begin{equation}\label{eq:base}
+    B(t+1) = B(t) + g \cdot I_{\text{base}}(t) \cdot
+    \underbrace{\left(1 - \frac{B(t)}{K_{\text{base}}}\right)}_{\text{Logistic因子}}
+  \end{equation}
+
+  \textbf{2. 殖民地更新方程：}
+  \begin{equation}\label{eq:colony}
+    C(t+1) = C(t) + g \cdot \left(
+      \frac{I_{\text{colony}}(t-d)}{\text{cost}} + C(t)
+    \right) \cdot
+    \underbrace{\left(1 - \frac{C(t)}{K_{\text{colony}}}\right)}_{\text{Logistic因子}}
+  \end{equation}
+
+  \textbf{3. 约束条件：}
+  \begin{equation}\label{eq:constraint}
+    I_{\text{base}}(t) + I_{\text{colony}}(t) \leq B(t), \qquad
+    I_{\text{base}},\; I_{\text{colony}} \geq 0
+  \end{equation}
+
+  \note{
+    这是模型的核心方程。公式1描述了母星的更新：每代母星新增加的生产力
+    等于增长率乘以投入量再乘以Logistic因子。Logistic因子的含义是：
+    当母星越接近其环境容量上限，增长的边际效益越低。
+
+    公式2描述了殖民地的更新，这里有几个关键点。第一，殖民地接收到的投入
+    来自$d$代之前的决策——这就是时间延迟，比如发射物资到火星需要等待。
+    第二，投入要除以成本系数cost，比如cost等于5意味着只有五分之一的投入
+    能转化为有效生产力。第三，注意括号里有一个$C(t)$项——这是殖民地的自增强机制，
+    殖民地已有的生产力也会产生新的生产力，就像复利一样。
+
+    公式3是约束条件：每代的总投入不能超过当期母星的生产力，
+    且投入不能为负——你不能投资超过你拥有的。
+  }
+\end{frame}
+
+\begin{frame}{参数体系}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{llcl}
+      \toprule
+      \textbf{参数} & \textbf{符号} & \textbf{默认值} & \textbf{含义} \\
+      \midrule
+      模拟代数       & $T$               & 120    & 模拟的总世代数 \\
+      增长率         & $g$               & $2^{1/12}-1$ & 每代增长率（12代翻倍）\\
+      殖民成本系数   & $\text{cost}$     & 5      & 殖民投入的效率折扣 \\
+      殖民延迟       & $d$               & 1      & 投入生效所需世代数 \\
+      母星容量上限   & $K_{\text{base}}$ & 10     & 母星Logistic增长上限 \\
+      殖民地容量上限 & $K_{\text{colony}}$ & 5   & 殖民地Logistic增长上限 \\
+      \bottomrule
+    \end{tabular}
+    \caption{核心参数一览}
+  \end{table}
+
+  \begin{exampleblock}{增长率说明}
+    $g = 2^{1/12}-1 \approx 5.95\%$，即每12代生产力翻倍。
+    这意味着投资具有强烈的\textbf{复利效应}，时机的微小差异会被指数放大。
+  \end{exampleblock}
+  \note{
+    这张表列出了模型的六个核心参数。模拟代数120代，增长率约5.95%，
+    也就是每12代翻倍。这个复利效应非常关键——它意味着早期决策的微小差异
+    会在后期被指数级放大。
+
+    殖民成本系数默认为5，代表每单位投入只有五分之一能转化为殖民地有效生产力。
+    这模拟了运输损耗、建设成本等因素。殖民延迟默认为1代，
+    即投入在下一代才开始生效。
+
+    母星容量10、殖民地容量5，这是Logistic增长的上限。
+    当星球接近容量上限时，边际回报急剧下降。
+    所有这些参数都可以在可视化平台中实时调节，
+    我们稍后会看到不同参数下的策略表现差异。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{求解策略设计}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{策略总览}
+  \begin{center}
+    \begin{tikzpicture}[
+      l1g/.style={draw, rounded corners=3pt, minimum width=3cm,
+                   minimum height=0.7cm, align=center, font=\small\bfseries,
+                   fill=gray!15},
+      l1b/.style={draw, rounded corners=3pt, minimum width=3cm,
+                   minimum height=0.7cm, align=center, font=\small\bfseries,
+                   fill=mainblue!15},
+      l1d/.style={draw, rounded corners=3pt, minimum width=3cm,
+                   minimum height=0.7cm, align=center, font=\small\bfseries,
+                   fill=darkgreen!15},
+      l2g/.style={draw, rounded corners=2pt, minimum width=2.8cm,
+                   minimum height=0.6cm, align=center, font=\footnotesize,
+                   fill=gray!8},
+      l2b/.style={draw, rounded corners=2pt, minimum width=2.8cm,
+                   minimum height=0.6cm, align=center, font=\footnotesize,
+                   fill=mainblue!8},
+      l2d/.style={draw, rounded corners=2pt, minimum width=2.8cm,
+                   minimum height=0.6cm, align=center, font=\footnotesize,
+                   fill=darkgreen!8},
+      arr/.style={-{Stealth[length=3pt]}, thick, gray!60},
+      node distance=0.4cm and 0.6cm
+    ]
+      \node[l1g] (cat1) {基线策略};
+      \node[l1b, right=2.5cm of cat1] (cat2) {启发式策略};
+      \node[l1d, right=2.5cm of cat2] (cat3) {优化策略};
+
+      \node[l2g, below=of cat1] (s1) {永不殖民};
+      \node[l2g, below=of s1] (s2) {固定比例};
+
+      \node[l2b, below=of cat2] (s3) {分段切换};
+      \node[l2b, below=of s3] (s4) {硬贪心};
+      \node[l2b, below=of s4] (s5) {软贪心};
+
+      \node[l2d, below=of cat3] (s6) {Euler--Lagrange};
+      \node[l2d, below=of s6] (s7) {混合Euler};
+
+      \draw[arr] (cat1) -- (s1); \draw[arr] (s1) -- (s2);
+      \draw[arr] (cat2) -- (s3); \draw[arr] (s3) -- (s4); \draw[arr] (s4) -- (s5);
+      \draw[arr] (cat3) -- (s6); \draw[arr] (s6) -- (s7);
+    \end{tikzpicture}
+  \end{center}
+
+  \vspace{0.2cm}
+  \begin{block}{设计思路}
+    从简单到复杂、从基线到最优：先建立\textbf{对照组}，再逐步引入更精细的决策逻辑，
+    最终以\textbf{连续最优控制}的离散化近似逼近理论最优解。
+  \end{block}
+  \note{
+    第三部分是我们的求解策略设计。我们总共实现了7种策略，
+    按照复杂度分为三个层次。
+
+    最底层是两个基线策略：永不殖民和固定比例。
+    永不殖民是纯母星发展的参考基准；固定比例则按恒定k值分配资源。
+
+    中间层是三个启发式策略：分段切换、硬贪心和软贪心。
+    分段策略在母星利用率达到阈值后切换殖民比例；
+    硬贪心每代比较两颗星球的即时边际收益，全仓投入更优的一边；
+    软贪心则是按边际收益的权重进行比例分配，避免剧烈切换。
+
+    最上层是两个优化策略：Euler-Lagrange近似和混合Euler策略。
+    这两个策略引入了影子价格的概念，是连续最优控制理论的离散化近似。
+
+    整体设计思路是从简单到复杂，层层递进。
+  }
+\end{frame}
+
+\begin{frame}{基线策略与启发式策略}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \textbf{基线策略}
+      \begin{itemize}
+        \item \textbf{永不殖民}：$I_{\text{colony}} = 0$
+        \begin{itemize}
+          \item 全部投入母星，仅受Logistic上限约束
+          \item 作为性能下界参考
+        \end{itemize}
+        \item \textbf{固定比例}：$I_{\text{colony}} = k \cdot B(t)$
+        \begin{itemize}
+          \item 恒定比例$k$分配，可调参数
+          \item 简单但无法适应动态环境
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \textbf{启发式策略}
+      \begin{itemize}
+        \item \textbf{分段切换}：
+        \begin{itemize}
+          \item $B(t)/K_{\text{base}} < \theta$：全投母星
+          \item $B(t)/K_{\text{base}} \geq \theta$：按比例$k$殖民
+        \end{itemize}
+        \item \textbf{硬贪心}：比较即时边际收益，\textbf{全仓切换}
+        \item \textbf{软贪心}：按边际收益\textbf{加权比例}分配
+        \[
+          k = \frac{\text{MR}_{\text{colony}}}{\text{MR}_{\text{base}} + \text{MR}_{\text{colony}}}
+        \]
+      \end{itemize}
+    \end{column}
+  \end{columns}
+
+  \note{
+    首先看基线策略。永不殖民就是什么都不投给殖民地，
+    100%投入母星。这个策略会收敛到母星的Logistic上限，
+    是一个自然的参考基准——如果任何殖民策略连这个都打不过，
+    那殖民就没有意义了。固定比例策略则以恒定的k值分配，
+    简单直观，但问题是它无法适应动态变化的环境。
+
+    启发式策略更聪明一些。分段切换策略会监控母星的利用率，
+    当利用率低于阈值时全投母星，超过阈值后才开始殖民。
+    这模拟了一种"先发展后扩张"的思路。
+
+    硬贪心策略每代都比较两颗星球的即时边际收益，哪个高就全仓投哪个。
+    问题在于它会产生剧烈的策略切换。软贪心策略改进了这一点，
+    它按照边际收益的权重来分配比例，使得策略变化更加平滑。
+
+    但这些策略都有一个共同的局限——它们只看眼前的收益，
+    没有考虑未来。这就是我们引入Euler-Lagrange策略的原因。
+  }
+\end{frame}
+
+\begin{frame}{Euler--Lagrange 近似策略}
+  \begin{block}{核心思想：引入\textbf{影子价格}（Shadow Price）}
+    影子价格 $\lambda$ 度量"今天投入1单位资源所能带来的未来总产出折现值"。
+  \end{block}
+
+  \vspace{0.2cm}
+  \textbf{母星影子价格：}
+  \begin{equation}\label{eq:lambda_base}
+    \lambda_{\text{base}} = \frac{\text{sat}_{\text{base}} \cdot (e^{gR} - 1)}{g}
+  \end{equation}
+
+  \textbf{殖民地影子价格（含延迟折现）：}
+  \begin{equation}\label{eq:lambda_colony}
+    \lambda_{\text{colony}} = \frac{\text{sat}_{\text{colony}} \cdot (e^{gR_{\text{eff}}} - 1)}{g \cdot \text{cost}}
+    \cdot (1+g)^{-d}
+  \end{equation}
+
+  \textbf{决策规则：}按影子价格之比进行比例分配
+  \begin{equation}\label{eq:euler_decision}
+    k^* = \frac{\lambda_{\text{colony}}}{\lambda_{\text{base}} + \lambda_{\text{colony}}}
+  \end{equation}
+
+  \note{
+    Euler-Lagrange策略是我们模型中最有理论深度的部分。
+    它的核心概念是影子价格。
+
+    影子价格度量的是：如果今天多投入1单位的资源，
+    它在未来总共能带来多少产出。这不仅仅看即时的边际收益，
+    而是把未来的所有收益都计算在内。
+
+    公式4中，$\text{sat}_{\text{base}}$是母星的饱和度，
+    即$1 - B(t)/K_{\text{base}}$。$R$是剩余代数。
+    $e^{gR} - 1$反映的是复利累积效应。
+
+    公式5中，殖民地的影子价格还要除以成本系数（因为投入有损耗），
+    再乘以$(1+g)^{-d}$进行延迟折现——因为投入要到d代之后才生效，
+    这期间母星本可以继续复利增长，所以需要扣除这个机会成本。
+
+    最终的决策如公式6所示，按照两个影子价格的比值来分配投入比例。
+    这个方法本质上是将连续时间最优控制中的Pontryagin最大值原理
+    离散化后的近似。
+  }
+\end{frame}
+
+\begin{frame}{混合 Euler 策略}
+  根据殖民地是否有容量上限，自适应切换两种优化模式：
+
+  \vspace{0.3cm}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{block}{模式一：殖民地无容量限制}
+        \begin{itemize}
+          \item 比较殖民复利效应与母星总容量
+          \item 若殖民复利占优 $\Rightarrow$ \textbf{全仓殖民}
+          \item 否则 $\Rightarrow$ 基于吸引力的比例分配
+        \end{itemize}
+        \vspace{0.1cm}
+        {\small 适用场景：大规模星际殖民，殖民地增长空间极大}
+      \end{block}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{模式二：殖民地有容量限制}
+        \begin{itemize}
+          \item 采用更保守的\textbf{指数型}影子价格：
+          \[
+            \lambda = \frac{\text{sat} \cdot (1 - e^{-gR \cdot \text{sat}})}{g}
+          \]
+          \item 按边际价值比例分配
+          \item 自动在接近容量上限时降低殖民投入
+        \end{itemize}
+        \vspace{0.1cm}
+        {\small 适用场景：有限目标殖民（如月球基地）}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \note{
+    混合Euler策略在Euler-Lagrange的基础上做了进一步的自适应优化。
+    它会根据殖民地的容量限制情况切换两种不同的决策模式。
+
+    模式一适用于殖民地没有容量限制的情况，比如大规模星际殖民。
+    此时如果殖民地的复利增长效应足够强——也就是说，
+    投入殖民地的钱能产生的长期回报超过了母星的全部容量价值——
+    那就应该全仓投入殖民地。否则就按照吸引力指标做比例分配。
+
+    模式二适用于殖民地有容量上限的情况，比如在月球或火星建有限规模的基地。
+    此时使用更保守的指数型影子价格公式，
+    这个公式在饱和度sat接近1时会自然衰减，
+    使得策略在殖民地接近满载时自动降低殖民投入。
+    这比线性积分形式的影子价格更加稳健。
+  }
+\end{frame}
+
+\begin{frame}{网格搜索验证}
+  \begin{block}{目的}
+    对分段策略的二维参数空间进行穷举搜索，为启发式策略提供\textbf{经验最优基准}。
+  \end{block}
+
+  \vspace{0.2cm}
+  \begin{columns}[T]
+    \begin{column}{0.50\textwidth}
+      \textbf{搜索空间：}
+      \begin{itemize}
+        \item 阈值 $\theta \in [0, 1]$，步长 $0.01$
+        \item 比例 $k \in [0, 1]$，步长 $0.01$
+        \item 共计 $100 \times 100 = \mathbf{10{,}000}$ 种组合
+      \end{itemize}
+      \vspace{0.2cm}
+      \textbf{固定参数：}
+      \begin{itemize}
+        \item $\text{cost} = 5,\; d = 50$
+        \item $K_{\text{base}} = 50,\; K_{\text{colony}} = 20$
+        \item $T = 120$
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.46\textwidth}
+      \textbf{意义：}
+      \begin{enumerate}
+        \item 为分段策略族找到\textbf{全局最优参数组合}
+        \item 验证启发式策略与经验最优的差距
+        \item 为参数敏感性分析提供数据支撑
+        \item 揭示阈值与比例之间的\textbf{耦合关系}
+      \end{enumerate}
+    \end{column}
+  \end{columns}
+
+  \note{
+    除了上述策略，我们还用网格搜索为分段策略找到了经验最优解。
+
+    网格搜索的原理很简单：在阈值theta从0到1、比例k从0到1的二维空间中，
+    以0.01为步长遍历所有10000种组合，对每种组合运行完整的模拟，
+    记录终态总生产力，找出最优的参数对。
+
+    这个工作有几个重要意义。第一，它为分段策略找到了全局最优参数，
+    作为其他策略的比较基准。第二，如果Euler-Lagrange策略的结果
+    接近或超过网格搜索最优，说明我们的理论近似是有效的。
+    第三，网格搜索的数据还能用于参数敏感性分析。
+
+    在我们的搜索中，使用了较高的延迟参数d=50来模拟极端场景下的策略表现。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{可视化平台实现}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{可视化平台——交互功能展示}
+  \begin{columns}[T]
+    \begin{column}{0.55\textwidth}
+      \textbf{平台特性：}
+      \begin{itemize}
+        \item \textbf{实时参数调节}——代数、成本、延迟、双星容量均可动态调整
+        \item \textbf{策略自由叠加}——7种策略可任意组合，同一图表对比
+        \item \textbf{折线图同步展示}——X轴为代际，Y轴为净生产力
+        \item \textbf{暗色模式}——支持界面主题切换
+      \end{itemize}
+
+      \vspace{0.3cm}
+      \textbf{设计理念：}
+      \begin{itemize}
+        \item 纯前端计算，零后端依赖
+        \item 参数变化即时反映到图表
+        \item 通过可视化直观理解\textbf{策略差异的根本原因}
+      \end{itemize}
+    \end{column}
+    \begin{column}{0.42\textwidth}
+      % 模拟平台界面的简化示意图
+      \begin{tikzpicture}[scale=0.75, every node/.style={font=\footnotesize}]
+        % 模拟图表区域
+        \draw[rounded corners=4pt, fill=mainblue!5, thick]
+              (0,0) rectangle (6,4.5);
+        \node[font=\small\bfseries, mainblue] at (3,4.2) {模型可视化平台};
+
+        % 坐标轴
+        \draw[-{Stealth}, thick] (0.5,0.5) -- (5.8,0.5)
+              node[right, font=\tiny] {代际};
+        \draw[-{Stealth}, thick] (0.5,0.5) -- (0.5,3.8)
+              node[above, font=\tiny] {净生产力};
+
+        % 模拟曲线
+        \draw[thick, mainblue]
+              (0.5,0.5) .. controls (1.5,1.0) and (2.5,2.0) .. (4.0,2.8)
+              .. controls (4.8,3.2) and (5.2,3.3) .. (5.6,3.35);
+        \draw[thick, accentred, dashed]
+              (0.5,0.5) .. controls (1.2,0.7) and (2.0,1.2) .. (3.0,2.0)
+              .. controls (4.0,3.0) and (5.0,3.5) .. (5.6,3.6);
+        \draw[thick, darkgreen, dotted]
+              (0.5,0.5) .. controls (1.5,0.9) and (2.0,1.8) .. (3.5,2.9)
+              .. controls (4.5,3.5) and (5.3,3.7) .. (5.6,3.75);
+
+        % 图例
+        \draw[thick, mainblue] (1.0,1.2) -- (1.6,1.2)
+              node[right, black, font=\tiny] {永不殖民};
+        \draw[thick, accentred, dashed] (1.0,0.9) -- (1.6,0.9)
+              node[right, black, font=\tiny] {Euler--Lagrange};
+        \draw[thick, darkgreen, dotted] (1.0,0.6) -- (1.6,0.6)
+              node[right, black, font=\tiny] {混合Euler};
+
+        % 参数面板示意
+        \node[draw, fill=white, rounded corners=2pt,
+              font=\tiny, align=left, anchor=north west]
+              at (3.2,1.8) {
+              代数: 120\\
+              成本: 5\\
+              延迟: 1\\
+              母星容量: 10\\
+              殖民容量: 5
+        };
+      \end{tikzpicture}
+    \end{column}
+  \end{columns}
+
+  \note{
+    第四部分是我们的可视化平台。这是我们用TypeScript开发的一个交互式网页工具。
+
+    平台的核心特性包括：第一，所有参数都可以实时调节——
+    代数、殖民成本、延迟、双星容量，调节后图表即时更新。
+    第二，7种策略可以任意组合叠加在同一张图表上对比。
+    第三，以折线图展示各策略的净生产力随代际的变化趋势。
+
+    我们的实现采用纯前端计算，不需要后端服务器。
+    模型引擎完全在浏览器中运行，参数变化后立即重新计算并更新图表。
+    这使得用户可以快速探索不同参数组合下的策略表现，
+    直观地理解为什么某些策略在某些条件下更优。
+
+    右侧的示意图模拟了平台的界面，展示了三条典型策略曲线的对比。
+    可以看到，优化策略在后期明显超越了基线策略。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{结果分析与讨论}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{策略对比分析}
+  \begin{table}
+    \centering
+    \small
+    \begin{tabular}{lcc}
+      \toprule
+      \textbf{策略} & \textbf{策略复杂度} & \textbf{预期表现} \\
+      \midrule
+      永不殖民       & 无决策       & 收敛至母星容量上限 \\
+      固定比例       & 1个参数      & 受$k$值选取影响大 \\
+      分段切换       & 2个参数      & 阈值敏感，需网格搜索优化 \\
+      硬贪心         & 无参数       & 策略切换剧烈，缺乏远见 \\
+      软贪心         & 无参数       & 比硬贪心平滑，但仍短视 \\
+      Euler--Lagrange & 无参数     & 考虑未来收益，表现优异 \\
+      混合Euler      & 无参数       & 自适应模式，综合最优 \\
+      \bottomrule
+    \end{tabular}
+    \caption{七种策略对比}
+  \end{table}
+
+  \begin{alertblock}{核心发现}
+    基于影子价格的优化策略（Euler--Lagrange、混合Euler）
+    显著优于仅依赖即时信息的启发式策略，
+    证明了\textbf{前瞻性决策}在空间殖民资源分配中的关键价值。
+  \end{alertblock}
+
+  \note{
+    这张表总结了七种策略的对比。从策略复杂度来看，
+    从最简单的永不殖民到最复杂的混合Euler，决策逻辑逐步深化。
+
+    从预期表现来看，永不殖民策略会收敛到母星的Logistic上限，
+    在有殖民机会的情况下显然不是最优的。固定比例策略的表现
+    高度依赖于k值的选择。分段切换策略虽然比固定比例更灵活，
+    但对阈值的选取非常敏感，需要网格搜索来找到最优参数。
+
+    贪心策略虽然不需要手动调参，但它们的根本局限在于短视——
+    只看即时边际收益，不考虑未来的复利累积。Euler-Lagrange和混合Euler
+    通过引入影子价格克服了这个问题。
+
+    我们的核心发现是：基于影子价格的优化策略显著优于启发式策略。
+    这说明在空间殖民这种涉及长期复利效应的决策中，
+    前瞻性考量是至关重要的。
+  }
+\end{frame}
+
+\begin{frame}{关键发现}
+  \begin{enumerate}
+    \item \textbf{Logistic饱和是殖民的根本动因}
+    \begin{itemize}
+      \item 母星接近容量上限时，边际回报急剧下降
+      \item 殖民地提供了一条\textbf{全新的增长曲线}
+    \end{itemize}
+
+    \vspace{0.3cm}
+    \item \textbf{延迟惩罚极其严重}
+    \begin{itemize}
+      \item 延迟$d$代的投入被折现为$(1+g)^{-d}$
+      \item 高延迟参数下，需\textbf{更早}启动殖民以对冲折现损失
+    \end{itemize}
+
+    \vspace{0.3cm}
+    \item \textbf{殖民地的复利引擎效应}
+    \begin{itemize}
+      \item $C(t)$出现在殖民地增长方程的括号内——自增强正反馈
+      \item 一旦殖民地越过\textbf{启动阈值}，可产生指数级回报
+    \end{itemize}
+
+    \vspace{0.3cm}
+    \item \textbf{容量拓扑决定最优策略类型}
+    \begin{itemize}
+      \item 殖民地无上限：早期全仓殖民可能最优
+      \item 双星有限容量：基于影子价格的比例分配更优
+    \end{itemize}
+  \end{enumerate}
+
+  \note{
+    我们从模型中提炼出四个关键发现。
+
+    第一，Logistic饱和是殖民的根本动因。如果母星可以无限增长，
+    那殖民就没有意义——把钱留在母星复利就好了。
+    正是因为母星有容量上限，当接近上限时边际回报急剧下降，
+    殖民地才提供了一条全新的增长曲线。
+
+    第二，延迟惩罚极其严重。由于复利效应的存在，
+    延迟d代才生效的投入，其价值被打了$(1+g)^{-d}$的折扣。
+    当延迟很大时，这个折扣是毁灭性的。这意味着
+    在高延迟场景下，必须更早启动殖民才能对冲折现损失。
+
+    第三，殖民地的复利引擎效应。注意增长方程中有一个$C(t)$项，
+    这意味着殖民地已有的生产力会加速新生产力的产生——
+    这是一个正反馈循环。一旦殖民地越过启动阈值，
+    它就能自我加速，产生指数级回报。
+
+    第四，容量拓扑决定最优策略类型。
+    如果殖民地没有容量限制，那么复利可以无限放大，
+    早期全仓投入殖民地可能是最优的。
+    但如果两颗星球都有容量上限，那么需要更加精细的影子价格比例分配。
+  }
+\end{frame}
+
+\begin{frame}{对"早熟陷阱 vs. 迟滞风险"的回答}
+  \begin{columns}[T]
+    \begin{column}{0.48\textwidth}
+      \begin{alertblock}{早熟陷阱}
+        \begin{itemize}
+          \item 过早大规模殖民$\Rightarrow$单位成本极高
+          \item 母星研发能力被削弱
+          \item 殖民地尚未形成自增强
+        \end{itemize}
+        \vspace{0.1cm}
+        {\small $\Rightarrow$ 模型中体现为高成本系数+低殖民地初值}
+      \end{alertblock}
+    \end{column}
+    \begin{column}{0.48\textwidth}
+      \begin{block}{迟滞风险}
+        \begin{itemize}
+          \item 过晚启动殖民$\Rightarrow$母星逼近容量上限
+          \item 剩余生产力不足以支撑大规模殖民
+          \item 延迟折现吞噬殖民回报
+        \end{itemize}
+        \vspace{0.1cm}
+        {\small $\Rightarrow$ 模型中体现为高Logistic饱和度+复利折现}
+      \end{block}
+    \end{column}
+  \end{columns}
+
+  \vspace{0.4cm}
+  \begin{exampleblock}{模型结论}
+    \textbf{最优窗口}：当母星利用率达到约$0.5$--$0.7$时启动殖民，
+    兼顾母星积累与殖民回报。影子价格方法能\textbf{自动捕捉}这一最优时机，
+    无需手动设定阈值。
+  \end{exampleblock}
+
+  \note{
+    回到开题时提出的核心问题：早熟陷阱与迟滞风险之间如何权衡？
+
+    早熟陷阱在模型中表现为：殖民成本系数高、殖民地初始生产力为零。
+    如果过早投入，投入的大部分被成本系数吞噬，
+    母星也因为减少了再投资而增长放缓，两头不讨好。
+
+    迟滞风险则表现为：母星已经接近Logistic上限，
+    增长率趋近于零。此时就算想殖民，也没有足够的剩余生产力来支撑，
+    加上延迟折现，殖民回报被严重侵蚀。
+
+    我们的模型给出的答案是：存在一个最优窗口，
+    大约在母星利用率达到50%到70%之间。
+    在这个区间启动殖民，既能保证母星已经有足够的技术积累
+    使殖民成本效益合理，又能在母星饱和之前充分利用复利效应。
+
+    更重要的是，影子价格方法能自动捕捉这个最优时机，
+    不需要人为设定阈值。当殖民地的影子价格超过母星时，
+    策略会自然增加殖民投入——这正是最优控制理论的美妙之处。
+  }
+\end{frame}
+
+\begin{frame}{模型局限与改进方向}
+  \textbf{当前局限：}
+  \begin{enumerate}
+    \item \textbf{离散化近似误差}——连续最优控制理论解被离散化后存在精度损失
+    \item \textbf{确定性假设}——未考虑技术突破的随机性、政治风险等不确定因素
+    \item \textbf{参数标定困难}——真实场景中成本系数、增长率等难以精确估计
+    \item \textbf{单一决策主体}——未纳入多政治实体博弈与竞争格局
+    \item \textbf{简化物理模型}——未考虑行星冲日周期等天文约束
+  \end{enumerate}
+
+  \vspace{0.3cm}
+  \textbf{未来改进方向：}
+  \begin{enumerate}
+    \item 引入\textbf{随机动态规划}，处理技术与政治的不确定性
+    \item 构建\textbf{多星球网络}模型，扩展至三个以上的殖民目标
+    \item 使用\textbf{机器学习}辅助策略搜索，替代网格搜索
+    \item 结合\textbf{实证数据}（如SpaceX发射成本曲线）进行参数校准
+  \end{enumerate}
+
+  \note{
+    当然，我们的模型也有明显的局限性，需要坦诚地面对。
+
+    第一，我们将连续最优控制问题离散化后，必然存在精度损失。
+    特别是当代数较少时，离散化的误差会更明显。
+
+    第二，模型是确定性的，没有考虑技术随机突破、政治变局等不确定因素。
+    现实中，一项关键技术突破可能瞬间改变成本结构。
+
+    第三，参数标定困难。成本系数、增长率这些参数在真实场景中很难精确估计。
+    我们使用的是理论值，与实际可能有偏差。
+
+    第四，我们假设只有一个决策主体。现实中，多个国家或企业可能同时进行殖民竞争，
+    这引入了博弈论层面的复杂性。
+
+    未来，我们考虑几个改进方向：引入随机动态规划来处理不确定性，
+    构建多星球网络模型，用机器学习替代网格搜索来加速策略优化，
+    以及结合SpaceX等公司的真实数据来校准参数。
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+\section{总结与展望}
+% ═══════════════════════════════════════════════════════════
+
+\begin{frame}{总结}
+  \begin{block}{核心贡献}
+    \begin{enumerate}
+      \item 建立了\textbf{双星球资源分配}的离散时间最优控制模型，
+            将空间殖民问题转化为可计算的数学优化问题
+      \item 设计了从基线到最优控制的\textbf{7种递进式策略}，
+            层层深入揭示决策逻辑
+      \item 引入\textbf{影子价格}机制，实现了对连续最优控制理论的离散化近似
+      \item 开发了\textbf{交互式可视化平台}，支持实时参数调节与策略对比
+    \end{enumerate}
+  \end{block}
+
+  \vspace{0.2cm}
+  \begin{exampleblock}{一句话结论}
+    在空间探索中，\textbf{前瞻性}比\textbf{即时贪婪}更重要；
+    影子价格方法能自动在早熟与迟滞之间找到最优平衡。
+  \end{exampleblock}
+
+  \note{
+    最后做个总结。我们这个项目的核心贡献有四个方面。
+
+    第一，我们建立了一个双星球资源分配的数学模型，
+    把空间殖民从一个模糊的战略问题转化为一个可以精确计算的优化问题。
+
+    第二，我们设计了7种从简单到复杂的策略，
+    形成了一个完整的策略谱系，可以系统地比较不同决策逻辑的优劣。
+
+    第三，最关键的贡献是引入了影子价格机制。
+    这个来自最优控制理论的概念，使得我们的模型能够自动、
+    无需人工设定阈值地找到最优的殖民时机和投入比例。
+
+    第四，我们开发了一个交互式可视化平台，
+    让用户可以直观地探索和验证这些结论。
+
+    用一句话概括我们的发现：在空间探索中，
+    前瞻性比即时贪婪更重要；影子价格方法能自动在早熟与迟滞之间找到最优平衡。
+
+    感谢各位老师和同学的聆听，欢迎提问！
+  }
+\end{frame}
+
+% ═══════════════════════════════════════════════════════════
+% 附录：参考文献
+% ═══════════════════════════════════════════════════════════
+\appendix
+
+\begin{frame}[allowframebreaks]{参考文献}
+  \begin{thebibliography}{9}
+    \setbeamertemplate{bibliography item}[text]
+
+    \bibitem{musk2020}
+    Musk, E.
+    \newblock Making Humans a Multi-Planetary Species.
+    \newblock \textit{New Space}, 4(2):44--55, 2016.
+
+    \bibitem{pontryagin1962}
+    Pontryagin, L.S., Boltyanskii, V.G., Gamkrelidze, R.V., Mishchenko, E.F.
+    \newblock \textit{The Mathematical Theory of Optimal Processes}.
+    \newblock Interscience Publishers, 1962.
+
+    \bibitem{verhulst1838}
+    Verhulst, P.-F.
+    \newblock Notice sur la loi que la population poursuit dans son accroissement.
+    \newblock \textit{Correspondance Math\'{e}matique et Physique}, 10:113--121, 1838.
+
+    \bibitem{o_neill1976}
+    O'Neill, G.K.
+    \newblock The Colonization of Space.
+    \newblock \textit{Physics Today}, 29(9):32--40, 1976.
+
+    \bibitem{stine1981}
+    Stine, G.H.
+    \newblock \textit{The Third Industrial Revolution}.
+    \newblock G.P. Putnam's Sons, 1981.
+
+  \end{thebibliography}
+
+  \note{
+    这里列出了我们参考的主要文献。
+    包括Musk关于多行星物种的论述、
+    Pontryagin最优控制理论的经典著作、
+    Verhulst的Logistic增长模型原始论文、
+    以及O'Neill和Stine关于太空殖民的经典研究。
+  }
+\end{frame}
+
+\begin{frame}[plain]
+  \begin{center}
+    \vfill
+    {\Huge\bfseries\textcolor{mainblue}{谢谢！}}\\[1cm]
+    {\Large 欢迎提问与讨论}
+    \vfill
+  \end{center}
+  \note{
+    我们的汇报到此结束，感谢各位老师和同学的耐心聆听！
+    欢迎大家就模型的假设、策略设计或可视化平台等方面提出问题。
+  }
+\end{frame}
+
+\end{document}
